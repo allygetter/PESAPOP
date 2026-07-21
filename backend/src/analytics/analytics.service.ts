@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { RedisService } from '../common/redis/redis.service';
 import * as dayjs from 'dayjs';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
+
+// FIX: use require() for CommonJS compatibility
+const weekOfYear = require('dayjs/plugin/weekOfYear');
 
 dayjs.extend(weekOfYear);
 
