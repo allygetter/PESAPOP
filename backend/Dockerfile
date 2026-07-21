@@ -49,4 +49,5 @@ USER nestjs
 EXPOSE 10000
 
 # IMPORTANT: use generated client directly (no prisma generate here)
-CMD ["node", "dist/main.js"]
+
+CMD ["node", "dist/src/main.js"]
