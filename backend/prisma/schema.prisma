@@ -210,8 +210,46 @@ model SaleItem {
   @@map("sale_items")
 }
 
-enum PaymentMethod { MPESA AIRTEL_MONEY CASH VISA MASTERCARD BANK_TRANSFER LOYALTY }
-enum PaymentStatus { PENDING COMPLETED FAILED REFUNDED }
+
+
+enum Plan {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  CASHIER
+  ACCOUNTANT
+  INVENTORY_OFFICER
+}
+
+enum MovementType {
+  STOCK_IN
+  STOCK_OUT
+  TRANSFER
+  ADJUSTMENT
+  RETURNED
+}
+
+enum PaymentMethod {
+  MPESA
+  AIRTEL_MONEY
+  CASH
+  VISA
+  MASTERCARD
+  BANK_TRANSFER
+  LOYALTY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
 
 model Payment {
   id            String        @id @default(uuid())
