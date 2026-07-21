@@ -15,11 +15,19 @@ export class AiService {
     private prisma: PrismaService,
     private analytics: AnalyticsService,
   ) {
-    this.openai = new OpenAI({ apiKey: this.config.get('OPENAI_API_KEY') });
+    this.openai = new OpenAI({
+      apiKey: this.config.get<string>('OPENAI_API_KEY'),
+    });
   }
 
-  async chat(businessId: string, messages: Array<{ role: 'user' | 'assistant'; content: string }>) {
-    // Fetch live business context to inject
+  async chat(
+    businessId: string,
+    messages: Array<{
+      role: 'user' | 'assistant';
+      content: string;
+    }>,
+  ) {
+    // Fetch live business context
     const context = await this.buildContext(businessId);
 
     const systemPrompt = `You are PESA AI, an expert business advisor for African SMEs using the PESAPOP Business Operating System.
@@ -33,7 +41,7 @@ Guidelines:
 - Always reference specific numbers from the context above when relevant.
 - If asked to forecast, base it on the trends shown in the data.
 - For inventory questions, flag low-stock items proactively.
-- Format currency as "KES X,XXX" format.
+- Format currency as "KES X,XXX".
 - If a question is outside your business data, say so honestly.
 - Keep responses under 200 words unless a detailed breakdown is needed.`;
 
@@ -49,17 +57,17 @@ Guidelines:
       });
 
       return {
-        message: completion.choices[0].message.content,
+        message: completion.choices[0].message.content ?? 'No response',
         usage: completion.usage,
       };
-    } catch (e) {
-      this.logger.error('OpenAI error:', e);
-      throw e;
+    } catch (error) {
+      this.logger.error('OpenAI error', error);
+      throw error;
     }
   }
 
   private async buildContext(businessId: string): Promise<string> {
-    const [dashboard, inventory, recentSales] = await Promise.all([
+    const [dashboardRaw, inventory] = await Promise.all([
       this.analytics.getDashboard(businessId, '30d'),
       this.prisma.product.findMany({
         where: { businessId, isActive: true },
@@ -67,34 +75,41 @@ Guidelines:
         take: 20,
         orderBy: { name: 'asc' },
       }),
-      this.prisma.sale.findMany({
-        where: { businessId, paymentStatus: 'COMPLETED' },
-        include: { items: { take: 3 } },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      }),
     ]);
 
+    // FIX: cast dashboard so TypeScript knows the properties exist
+    const dashboard: any = dashboardRaw;
+
     const lowStock = inventory
-      .map(p => ({ ...p, qty: p.stockItems.reduce((s, i) => s + i.qty, 0) }))
-      .filter(p => p.qty <= p.reorderLevel)
-      .map(p => `${p.name} (${p.qty} left)`);
+      .map((p) => ({
+        ...p,
+        qty: p.stockItems.reduce((sum, item) => sum + item.qty, 0),
+      }))
+      .filter((p) => p.qty <= p.reorderLevel)
+      .map((p) => `${p.name} (${p.qty} left)`);
 
     return `
 === BUSINESS OVERVIEW (Last 30 Days) ===
-Revenue: KES ${dashboard.revenue.toLocaleString()}
-Net Profit: KES ${dashboard.profit.toLocaleString()}
-Profit Margin: ${dashboard.profitMargin.toFixed(1)}%
-Transactions: ${dashboard.transactionCount}
-Avg Order Value: KES ${dashboard.avgOrderValue.toFixed(0)}
-Revenue Trend: ${dashboard.revenueTrend > 0 ? '+' : ''}${dashboard.revenueTrend}% vs previous period
-Total Customers: ${dashboard.customers} (${dashboard.newCustomers} new)
+Revenue: KES ${Number(dashboard.revenue ?? 0).toLocaleString()}
+Net Profit: KES ${Number(dashboard.profit ?? 0).toLocaleString()}
+Profit Margin: ${Number(dashboard.profitMargin ?? 0).toFixed(1)}%
+Transactions: ${dashboard.transactionCount ?? 0}
+Avg Order Value: KES ${Number(dashboard.avgOrderValue ?? 0).toFixed(0)}
+Revenue Trend: ${dashboard.revenueTrend > 0 ? '+' : ''}${dashboard.revenueTrend ?? 0}% vs previous period
+Total Customers: ${dashboard.customers ?? 0} (${dashboard.newCustomers ?? 0} new)
 
 === TOP PRODUCTS ===
-${dashboard.topProducts.map((p: any, i: number) => `${i+1}. ${p.name} — KES ${p.revenue.toLocaleString()} (${p.units} units)`).join('\n')}
+${(dashboard.topProducts ?? [])
+  .map(
+    (p: any, i: number) =>
+      `${i + 1}. ${p.name} — KES ${Number(p.revenue ?? 0).toLocaleString()} (${p.units ?? 0} units)`,
+  )
+  .join('\n') || 'No sales data'}
 
 === PAYMENT BREAKDOWN ===
-${Object.entries(dashboard.paymentBreakdown).map(([k,v]) => `${k}: ${v}%`).join(', ')}
+${Object.entries(dashboard.paymentBreakdown ?? {})
+  .map(([k, v]) => `${k}: ${v}%`)
+  .join(', ') || 'No payment data'}
 
 === LOW STOCK ALERTS (${lowStock.length} products) ===
 ${lowStock.length > 0 ? lowStock.join(', ') : 'None — all products well-stocked'}
