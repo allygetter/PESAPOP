@@ -35,7 +35,7 @@ model Business {
   @@map("businesses")
 }
 
-enum Plan { STARTER GROWTH ENTERPRISE }
+
 
 model Branch {
   id         String     @id @default(uuid())
@@ -73,7 +73,7 @@ model User {
   @@map("users")
 }
 
-enum UserRole { OWNER MANAGER CASHIER ACCOUNTANT INVENTORY_OFFICER }
+
 
 model OtpCode {
   id        String   @id @default(uuid())
@@ -164,7 +164,7 @@ model StockMovement {
   @@map("stock_movements")
 }
 
-enum MovementType { STOCK_IN STOCK_OUT TRANSFER ADJUSTMENT RETURNED }
+
 
 model Sale {
   id            String        @id @default(uuid())
@@ -250,6 +250,7 @@ enum PaymentStatus {
   FAILED
   REFUNDED
 }
+
 
 model Payment {
   id            String        @id @default(uuid())
