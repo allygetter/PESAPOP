@@ -158,8 +158,7 @@ export class AnalyticsService {
       const key =
         groupBy === 'day'
           ? dayjs(sale.createdAt).format('MMM DD')
-          : `Week ${dayjs(sale.createdAt).week()}`;
-
+        : `Week ${dayjs(sale.createdAt).format('WW')}`;
       grouped[key] =
         (grouped[key] ?? 0) + Number(sale.grandTotal);
     }
