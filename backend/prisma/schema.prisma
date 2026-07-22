@@ -1,7 +1,8 @@
 // prisma/schema.prisma — PESAPOP AI Database Schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -9,208 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Business {
-  id          String    @id @default(uuid())
-  name        String
-  phone       String    @unique
-  email       String?
-  address     String?
-  logoUrl     String?
-  currency    String    @default("KES")
-  timezone    String    @default("Africa/Nairobi")
-  vatNumber   String?
-  plan        Plan      @default(STARTER)
-  planExpiry  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  users       User[]
-  branches    Branch[]
-  products    Product[]
-  customers   Customer[]
-  sales       Sale[]
-  expenses    Expense[]
-  suppliers   Supplier[]
-  categories  Category[]
-  employees   Employee[]
-  @@map("businesses")
-}
-
-
-
-model Branch {
-  id         String     @id @default(uuid())
-  businessId String
-  name       String
-  phone      String?
-  address    String?
-  isDefault  Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users      User[]
-  sales      Sale[]
-  stockItems StockItem[]
-  @@map("branches")
-}
-
-model User {
-  id          String    @id @default(uuid())
-  businessId  String
-  branchId    String?
-  name        String
-  phone       String    @unique
-  email       String?
-  role        UserRole  @default(CASHIER)
-  pin         String?
-  isActive    Boolean   @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  branch      Branch?   @relation(fields: [branchId], references: [id])
-  sales       Sale[]
-  otpCodes    OtpCode[]
-  sessions    Session[]
-  @@map("users")
-}
-
-
-
-model OtpCode {
-  id        String   @id @default(uuid())
-  userId    String?
-  phone     String
-  code      String
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("otp_codes")
-}
-
-model Session {
-  id           String   @id @default(uuid())
-  userId       String
-  refreshToken String   @unique
-  deviceInfo   String?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("sessions")
-}
-
-model Category {
-  id         String    @id @default(uuid())
-  businessId String
-  name       String
-  color      String?
-  icon       String?
-  createdAt  DateTime  @default(now())
-  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  products   Product[]
-  @@unique([businessId, name])
-  @@map("categories")
-}
-
-model Product {
-  id           String    @id @default(uuid())
-  businessId   String
-  categoryId   String?
-  name         String
-  sku          String?
-  barcode      String?
-  description  String?
-  price        Decimal   @db.Decimal(12,2)
-  costPrice    Decimal?  @db.Decimal(12,2)
-  unit         String    @default("pcs")
-  taxRate      Decimal   @default(0.16) @db.Decimal(5,4)
-  isVatExempt  Boolean   @default(false)
-  imageUrl     String?
-  isActive     Boolean   @default(true)
-  reorderLevel Int       @default(5)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  category     Category? @relation(fields: [categoryId], references: [id])
-  stockItems   StockItem[]
-  saleItems    SaleItem[]
-  movements    StockMovement[]
-  @@unique([businessId, sku])
-  @@map("products")
-}
-
-model StockItem {
-  id        String   @id @default(uuid())
-  productId String
-  branchId  String
-  qty       Int      @default(0)
-  updatedAt DateTime @updatedAt
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  branch    Branch   @relation(fields: [branchId], references: [id])
-  @@unique([productId, branchId])
-  @@map("stock_items")
-}
-
-model StockMovement {
-  id          String       @id @default(uuid())
-  productId   String
-  branchId    String
-  type        MovementType
-  qty         Int
-  note        String?
-  reference   String?
-  createdById String?
-  createdAt   DateTime     @default(now())
-  product     Product      @relation(fields: [productId], references: [id])
-  @@map("stock_movements")
-}
-
-
-
-model Sale {
-  id            String        @id @default(uuid())
-  businessId    String
-  branchId      String
-  cashierId     String
-  customerId    String?
-  receiptNumber String        @unique
-  subtotal      Decimal       @db.Decimal(12,2)
-  taxTotal      Decimal       @db.Decimal(12,2)
-  discountTotal Decimal       @default(0) @db.Decimal(12,2)
-  grandTotal    Decimal       @db.Decimal(12,2)
-  amountPaid    Decimal       @db.Decimal(12,2)
-  change        Decimal       @default(0) @db.Decimal(12,2)
-  paymentMethod PaymentMethod
-  paymentStatus PaymentStatus @default(PENDING)
-  mpesaRef      String?
-  mpesaPhone    String?
-  notes         String?
-  createdAt     DateTime      @default(now())
-  business      Business      @relation(fields: [businessId], references: [id])
-  branch        Branch        @relation(fields: [branchId], references: [id])
-  cashier       User          @relation(fields: [cashierId], references: [id])
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  items         SaleItem[]
-  payment       Payment?
-  @@index([businessId, createdAt])
-  @@map("sales")
-}
-
-model SaleItem {
-  id        String  @id @default(uuid())
-  saleId    String
-  productId String
-  name      String
-  qty       Int
-  price     Decimal @db.Decimal(12,2)
-  discount  Decimal @default(0) @db.Decimal(12,2)
-  tax       Decimal @default(0) @db.Decimal(12,2)
-  subtotal  Decimal @db.Decimal(12,2)
-  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
-  @@map("sale_items")
-}
-
-
+// ==============================
+// ENUMS
+// ==============================
 
 enum Plan {
   STARTER
@@ -251,21 +53,278 @@ enum PaymentStatus {
   REFUNDED
 }
 
+// ==============================
+// BUSINESS
+// ==============================
+
+model Business {
+  id          String    @id @default(uuid())
+  name        String
+  phone       String    @unique
+  email       String?
+  address     String?
+  logoUrl     String?
+  currency    String    @default("KES")
+  timezone    String    @default("Africa/Nairobi")
+  vatNumber   String?
+  plan        Plan      @default(STARTER)
+  planExpiry  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+  branches    Branch[]
+  products    Product[]
+  customers   Customer[]
+  sales       Sale[]
+  expenses    Expense[]
+  suppliers   Supplier[]
+  categories  Category[]
+  employees   Employee[]
+
+  @@map("businesses")
+}
+
+// ==============================
+// BRANCHES
+// ==============================
+
+model Branch {
+  id         String     @id @default(uuid())
+  businessId String
+  name       String
+  phone      String?
+  address    String?
+  isDefault  Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users      User[]
+  sales      Sale[]
+  stockItems StockItem[]
+
+  @@map("branches")
+}
+
+// ==============================
+// USERS
+// ==============================
+
+model User {
+  id          String    @id @default(uuid())
+  businessId  String
+  branchId    String?
+  name        String
+  phone       String    @unique
+  email       String?
+  role        UserRole  @default(CASHIER)
+  pin         String?
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch      Branch?   @relation(fields: [branchId], references: [id])
+
+  sales       Sale[]
+  otpCodes    OtpCode[]
+  sessions    Session[]
+
+  @@map("users")
+}
+
+// ==============================
+// OTP & SESSIONS
+// ==============================
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String?
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_codes")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  deviceInfo   String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ==============================
+// CATEGORIES & PRODUCTS
+// ==============================
+
+model Category {
+  id         String    @id @default(uuid())
+  businessId String
+  name       String
+  color      String?
+  icon       String?
+  createdAt  DateTime  @default(now())
+
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products   Product[]
+
+  @@unique([businessId, name])
+  @@map("categories")
+}
+
+model Product {
+  id           String    @id @default(uuid())
+  businessId   String
+  categoryId   String?
+  name         String
+  sku          String?
+  barcode      String?
+  description  String?
+  price        Decimal   @db.Decimal(12, 2)
+  costPrice    Decimal?  @db.Decimal(12, 2)
+  unit         String    @default("pcs")
+  taxRate      Decimal   @default(0.16) @db.Decimal(5, 4)
+  isVatExempt  Boolean   @default(false)
+  imageUrl     String?
+  isActive     Boolean   @default(true)
+  reorderLevel Int       @default(5)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category     Category? @relation(fields: [categoryId], references: [id])
+
+  stockItems   StockItem[]
+  saleItems    SaleItem[]
+  movements    StockMovement[]
+
+  @@unique([businessId, sku])
+  @@map("products")
+}
+
+// ==============================
+// INVENTORY
+// ==============================
+
+model StockItem {
+  id        String   @id @default(uuid())
+  productId String
+  branchId  String
+  qty       Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branch    Branch   @relation(fields: [branchId], references: [id])
+
+  @@unique([productId, branchId])
+  @@map("stock_items")
+}
+
+model StockMovement {
+  id          String       @id @default(uuid())
+  productId   String
+  branchId    String
+  type        MovementType
+  qty         Int
+  note        String?
+  reference   String?
+  createdById String?
+  createdAt   DateTime     @default(now())
+
+  product     Product      @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// ==============================
+// SALES
+// ==============================
+
+model Sale {
+  id            String        @id @default(uuid())
+  businessId    String
+  branchId      String
+  cashierId     String
+  customerId    String?
+  receiptNumber String        @unique
+  subtotal      Decimal       @db.Decimal(12, 2)
+  taxTotal      Decimal       @db.Decimal(12, 2)
+  discountTotal Decimal       @default(0) @db.Decimal(12, 2)
+  grandTotal    Decimal       @db.Decimal(12, 2)
+  amountPaid    Decimal       @db.Decimal(12, 2)
+  change        Decimal       @default(0) @db.Decimal(12, 2)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  mpesaRef      String?
+  mpesaPhone    String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  business      Business      @relation(fields: [businessId], references: [id])
+  branch        Branch        @relation(fields: [branchId], references: [id])
+  cashier       User          @relation(fields: [cashierId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+
+  items         SaleItem[]
+  payment       Payment?
+
+  @@index([businessId, createdAt])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String
+  productId String
+  name      String
+  qty       Int
+  price     Decimal @db.Decimal(12, 2)
+  discount  Decimal @default(0) @db.Decimal(12, 2)
+  tax       Decimal @default(0) @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("sale_items")
+}
+
+// ==============================
+// PAYMENTS
+// ==============================
 
 model Payment {
   id            String        @id @default(uuid())
   saleId        String        @unique
   method        PaymentMethod
-  amount        Decimal       @db.Decimal(12,2)
+  amount        Decimal       @db.Decimal(12, 2)
   status        PaymentStatus @default(PENDING)
   gatewayRef    String?
   gatewayMeta   Json?
   failureReason String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
   sale          Sale          @relation(fields: [saleId], references: [id])
+
   @@map("payments")
 }
+
+// ==============================
+// CUSTOMERS
+// ==============================
 
 model Customer {
   id            String   @id @default(uuid())
@@ -274,29 +333,41 @@ model Customer {
   phone         String?
   email         String?
   loyaltyPoints Int      @default(0)
-  creditBalance Decimal  @default(0) @db.Decimal(12,2)
+  creditBalance Decimal  @default(0) @db.Decimal(12, 2)
   tier          String   @default("regular")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
   business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sales         Sale[]
+
   @@unique([businessId, phone])
   @@map("customers")
 }
+
+// ==============================
+// EXPENSES
+// ==============================
 
 model Expense {
   id          String   @id @default(uuid())
   businessId  String
   category    String
   description String
-  amount      Decimal  @db.Decimal(12,2)
+  amount      Decimal  @db.Decimal(12, 2)
   date        DateTime
   receipt     String?
   createdAt   DateTime @default(now())
+
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   @@index([businessId, date])
   @@map("expenses")
 }
+
+// ==============================
+// SUPPLIERS
+// ==============================
 
 model Supplier {
   id         String   @id @default(uuid())
@@ -307,9 +378,15 @@ model Supplier {
   address    String?
   rating     Int      @default(5)
   createdAt  DateTime @default(now())
+
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   @@map("suppliers")
 }
+
+// ==============================
+// EMPLOYEES
+// ==============================
 
 model Employee {
   id         String    @id @default(uuid())
@@ -317,9 +394,11 @@ model Employee {
   name       String
   phone      String?
   role       String
-  salary     Decimal?  @db.Decimal(12,2)
+  salary     Decimal?  @db.Decimal(12, 2)
   hiredAt    DateTime?
   createdAt  DateTime  @default(now())
+
   business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   @@map("employees")
 }
