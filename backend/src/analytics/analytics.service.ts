@@ -3,11 +3,6 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { RedisService } from '../common/redis/redis.service';
 import * as dayjs from 'dayjs';
 
-// FIX: use require() for CommonJS compatibility
-const weekOfYear = require('dayjs/plugin/weekOfYear');
-
-dayjs.extend(weekOfYear);
-
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -158,7 +153,8 @@ export class AnalyticsService {
       const key =
         groupBy === 'day'
           ? dayjs(sale.createdAt).format('MMM DD')
-        : `Week ${dayjs(sale.createdAt).format('WW')}`;
+          : `Week ${Math.ceil(dayjs(sale.createdAt).date() / 7)}`;
+
       grouped[key] =
         (grouped[key] ?? 0) + Number(sale.grandTotal);
     }
