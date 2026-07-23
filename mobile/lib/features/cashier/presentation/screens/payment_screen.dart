@@ -310,7 +310,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen>
           border: border,
           textPrimary: textPrimary,
           textSec: textSec,
-          onChange: (v) => setState(() {}),
+          onChange: () => setState(() {}),
         );
       case PaymentMethodType.airtelMoney:
         return _MpesaInput(
