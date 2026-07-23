@@ -1,6 +1,6 @@
 // lib/features/cashier/presentation/screens/pos_screen.dart
 // PESAPOP AI — POS Screen: product grid, search, category filter, cart bar
-
+import '../providers/product_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
