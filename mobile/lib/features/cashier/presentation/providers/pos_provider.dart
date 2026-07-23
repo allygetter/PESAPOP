@@ -1,6 +1,6 @@
 // lib/features/cashier/presentation/providers/pos_provider.dart
 // UPDATED — uses real PosRepository
-
+import '../providers/product_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/pos_repository.dart';
 import '../../domain/cashier_models.dart';
