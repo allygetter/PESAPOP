@@ -25,7 +25,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final stats = ref.watch(ownerStatsProvider);
+    final stats = ref.watch(ownerStatsProvider('default'));
 
     final bg = isDark ? PPColors.darkBg : PPColors.lightBg;
     final surf = isDark ? PPColors.darkSurface : PPColors.lightSurface;
