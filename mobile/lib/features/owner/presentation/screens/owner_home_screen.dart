@@ -20,7 +20,7 @@ class OwnerHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
-    final stats = ref.watch(ownerStatsProvider);
+    final stats = ref.watch(ownerStatsProvider('default'));
 
     final bg = isDark ? PPColors.darkBg : PPColors.lightBg;
     final surf = isDark ? PPColors.darkSurface : PPColors.lightSurface;
