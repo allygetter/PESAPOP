@@ -124,7 +124,12 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   void reset() => state = const PaymentState();
 }
 
-// Live cashier stats (replaces CashierStats.mock)
-final cashierStatsProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) {
-  return ref.read(posRepositoryProvider).getTodaySummary();
+// Live cashier stats (returns CashierStats object)
+final cashierStatsProvider =
+    FutureProvider.autoDispose<CashierStats>((ref) async {
+
+  final data = await ref.read(posRepositoryProvider).getTodaySummary();
+
+  return CashierStats.fromJson(data);
+
 });
