@@ -9,9 +9,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/formatters.dart';
-
+import '../../domain/cashier_models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../domain/pos_models.dart';
+
 import '../providers/cart_provider.dart';
 import '../providers/pos_provider.dart';
 
