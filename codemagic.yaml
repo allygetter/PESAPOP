@@ -1,0 +1,23 @@
+workflows:
+  android-release:
+    name: Android Release
+
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter pub get
+
+      - name: Build Android App Bundle
+        script: |
+          cd mobile
+          flutter build appbundle --release
+
+    artifacts:
+      - mobile/build/app/outputs/**/*.aab
+      - mobile/build/app/outputs/**/*.apk
