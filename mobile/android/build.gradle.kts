@@ -1,11 +1,22 @@
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Delete
-import com.android.build.gradle.LibraryExtension
 
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+// Force all Android libraries/plugins to compile with SDK 36
+subprojects {
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            project.extensions.extraProperties.set(
+                "compileSdkVersion",
+                36
+            )
+        }
     }
 }
 
@@ -16,30 +27,16 @@ val newBuildDir: Directory =
 
 rootProject.layout.buildDirectory.value(newBuildDir)
 
-
 subprojects {
     val newSubprojectBuildDir: Directory =
         newBuildDir.dir(project.name)
 
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
 
+subprojects {
     project.evaluationDependsOn(":app")
 }
-
-
-/*
- * Force all Android library plugins
- * (including bluetooth_print_plus)
- * to use Android SDK 36
- */
-subprojects {
-    plugins.withId("com.android.library") {
-        extensions.configure<LibraryExtension> {
-            compileSdk = 36
-        }
-    }
-}
-
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
