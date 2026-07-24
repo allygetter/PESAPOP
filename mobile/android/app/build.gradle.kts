@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "com.example.pesapop_app"
 
-    compileSdk = flutter.compileSdkVersion
+    // Force latest Android SDK for bluetooth_print_plus compatibility
+    compileSdk = 36
+
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -22,7 +24,9 @@ android {
         applicationId = "com.example.pesapop_app"
 
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+
+        // Force Android 36 target
+        targetSdk = 36
 
         versionCode = flutter.versionCode
         versionName = flutter.versionName
