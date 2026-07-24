@@ -1,4 +1,3 @@
-import com.android.build.gradle.BaseExtension
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Delete
 
@@ -19,15 +18,11 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory =
         newBuildDir.dir(project.name)
-    layout.buildDirectory.value(newSubprojectBuildDir)
+    project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
 
-    evaluationDependsOn(":app")
-
-    afterEvaluate {
-        extensions.findByName("android")?.let {
-            (it as BaseExtension).compileSdkVersion(36)
-        }
-    }
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
