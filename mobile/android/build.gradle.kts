@@ -1,5 +1,6 @@
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Delete
+import com.android.build.gradle.LibraryExtension
 
 allprojects {
     repositories {
@@ -18,11 +19,22 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory =
         newBuildDir.dir(project.name)
+
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    project.evaluationDependsOn(":app")
 }
 
+/*
+ * Force Flutter plugins (including bluetooth_print_plus)
+ * to compile using Android SDK 36.
+ */
 subprojects {
-    project.evaluationDependsOn(":app")
+    plugins.withId("com.android.library") {
+        extensions.configure<LibraryExtension> {
+            compileSdk = 36
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
