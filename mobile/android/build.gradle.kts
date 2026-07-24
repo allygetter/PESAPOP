@@ -16,6 +16,7 @@ val newBuildDir: Directory =
 
 rootProject.layout.buildDirectory.value(newBuildDir)
 
+
 subprojects {
     val newSubprojectBuildDir: Directory =
         newBuildDir.dir(project.name)
@@ -25,9 +26,11 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+
 /*
- * Force Flutter plugins (including bluetooth_print_plus)
- * to compile using Android SDK 36.
+ * Force all Android library plugins
+ * (including bluetooth_print_plus)
+ * to use Android SDK 36
  */
 subprojects {
     plugins.withId("com.android.library") {
@@ -36,6 +39,7 @@ subprojects {
         }
     }
 }
+
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
